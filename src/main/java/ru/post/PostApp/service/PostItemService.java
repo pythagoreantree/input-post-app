@@ -1,5 +1,6 @@
 package ru.post.PostApp.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,10 +16,12 @@ import java.util.UUID;
 
 import static ru.post.PostApp.domain.document.PostItemDocument.fromRequest;
 
+@Slf4j
 @Service
 public class PostItemService {
 
     public static final String POST_CREATED = "POST_CREATED";
+    public static final String SENT = "SENT";
 
     @Autowired
     private PostItemMongoRepository postItemRepository;
@@ -33,28 +36,37 @@ public class PostItemService {
 
         PostItemDocument document = fromRequest(request);
 
+        String eventId = UUID.randomUUID().toString();
+        PostCreatedEvent rabbitEvent = PostCreatedEvent.builder()
+                .id(eventId)
+                .type(POST_CREATED)
+                .payload(request)
+                .createdAt(LocalDateTime.now())
+                .build();
+
         PostItemDocument.OutboxEvent outboxEvent = PostItemDocument.OutboxEvent.builder()
-                .id(UUID.randomUUID().toString())
+                .id(eventId)
                 .type(POST_CREATED)
                 .payload(request)
                 .createdAt(LocalDateTime.now())
                 .build();
         document.getPendingEvents().add(outboxEvent);
-
         PostItemDocument savedDocument = postItemRepository.save(document);
 
-        PostCreatedEvent event = PostCreatedEvent.builder()
-                .id(UUID.randomUUID().toString())
-                .type(POST_CREATED)
-                .createdAt(LocalDateTime.now())
-                .payload(request)
-                .build();
+        try {
+            rabbitTemplate.convertAndSend(
+                    RabbitMQConfig.EXCHANGE_NAME,
+                    RabbitMQConfig.ROUTING_KEY,
+                    rabbitEvent
+            );
 
-        rabbitTemplate.convertAndSend(
-                RabbitMQConfig.EXCHANGE_NAME,
-                RabbitMQConfig.ROUTING_KEY,
-                event
-        );
+            outboxEvent.setStatus(SENT);
+            outboxEvent.setSentAt(LocalDateTime.now());
+            postItemRepository.save(savedDocument);
+
+        } catch (Exception e) {
+            log.warn("Failed to send to RabbitMQ, will retry later", e);
+        }
 
         return toResponse(savedDocument);
     }

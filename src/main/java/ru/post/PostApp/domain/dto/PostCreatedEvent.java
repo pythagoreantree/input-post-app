@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.post.PostApp.api.dto.request.PostItemRequest;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

@@ -43,4 +43,22 @@ public class RabbitMQConfig {
     public JacksonJsonMessageConverter messageConverter() {
         return new JacksonJsonMessageConverter();
     }
+
+    @Bean
+    public ConnectionFactory connectionFactory(RabbitProperties properties) {
+        CachingConnectionFactory factory = new CachingConnectionFactory();
+        factory.setHost(properties.getHost());
+        factory.setPort(properties.getPort());
+        factory.setUsername(properties.getUsername());
+        factory.setPassword(properties.getPassword());
+        return factory;
+    }
+
+    @Bean
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory,
+                                         JacksonJsonMessageConverter messageConverter) {
+        RabbitTemplate template = new RabbitTemplate(connectionFactory);
+        template.setMessageConverter(messageConverter);
+        return template;
+    }
 }

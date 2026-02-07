@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: PostApp
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postapp_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  mongodb:
+    uri: mongodb://localhost:27017/postapp_db
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+    publisher-confirms-type: correlated
+    publisher-returns: true
+
+    template:
+      retry:
+        enabled: true
+        initial-interval: 1s
+        multiplier: 2.0
+        max-retries: 3
+
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    httpexchanges:
+      enabled: true
+      recording:
+        include: ALL

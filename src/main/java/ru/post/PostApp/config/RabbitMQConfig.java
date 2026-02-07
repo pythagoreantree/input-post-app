@@ -7,6 +7,7 @@ import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.boot.amqp.autoconfigure.RabbitProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -39,17 +40,7 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public ConnectionFactory connectionFactory(RabbitProperties properties) {
-        CachingConnectionFactory factory = new CachingConnectionFactory();
-        factory.setHost(properties.getHost());
-        factory.setPort(properties.getPort());
-        factory.setUsername(properties.getUsername());
-        factory.setPassword(properties.getPassword());
-        return factory;
-    }
-
-    @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
-        return new RabbitTemplate(connectionFactory);
+    public JacksonJsonMessageConverter messageConverter() {
+        return new JacksonJsonMessageConverter();
     }
 }

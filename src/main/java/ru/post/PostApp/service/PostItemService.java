@@ -7,6 +7,7 @@ import ru.post.PostApp.api.dto.request.PostItemRequest;
 import ru.post.PostApp.api.dto.response.PostItemResponse;
 import ru.post.PostApp.config.RabbitMQConfig;
 import ru.post.PostApp.domain.document.PostItemDocument;
+import ru.post.PostApp.domain.dto.PostCreatedEvent;
 import ru.post.PostApp.repository.mongo.PostItemMongoRepository;
 
 import java.time.LocalDateTime;
@@ -32,16 +33,22 @@ public class PostItemService {
 
         PostItemDocument document = fromRequest(request);
 
-        PostItemDocument.OutboxEvent event = PostItemDocument.OutboxEvent.builder()
-                .eventId(UUID.randomUUID().toString())
-                .eventType(POST_CREATED)
+        PostItemDocument.OutboxEvent outboxEvent = PostItemDocument.OutboxEvent.builder()
+                .id(UUID.randomUUID().toString())
+                .type(POST_CREATED)
                 .payload(request)
                 .createdAt(LocalDateTime.now())
                 .build();
-
-        document.getPendingEvents().add(event);
+        document.getPendingEvents().add(outboxEvent);
 
         PostItemDocument savedDocument = postItemRepository.save(document);
+
+        PostCreatedEvent event = PostCreatedEvent.builder()
+                .id(UUID.randomUUID().toString())
+                .type(POST_CREATED)
+                .createdAt(LocalDateTime.now())
+                .payload(request)
+                .build();
 
         rabbitTemplate.convertAndSend(
                 RabbitMQConfig.EXCHANGE_NAME,

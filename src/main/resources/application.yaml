@@ -30,11 +30,12 @@ spring:
     publisher-returns: true
 
     template:
+      delivery-mode: persistent
       retry:
-        enabled: true
-        initial-interval: 1s
-        multiplier: 2.0
-        max-retries: 3
+        enabled: false
+#        initial-interval: 1s
+#        multiplier: 2.0
+#        max-retries: 3
 
 
 server:

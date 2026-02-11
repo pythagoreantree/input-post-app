@@ -36,19 +36,18 @@ public class PostItemService {
 
         PostItemDocument document = fromRequest(request);
 
-        String eventId = UUID.randomUUID().toString();
         PostCreatedEvent rabbitEvent = PostCreatedEvent.builder()
-                .id(eventId)
+                .id(UUID.randomUUID().toString())
                 .type(POST_CREATED)
                 .payload(request)
                 .createdAt(LocalDateTime.now())
                 .build();
 
         PostItemDocument.OutboxEvent outboxEvent = PostItemDocument.OutboxEvent.builder()
-                .id(eventId)
-                .type(POST_CREATED)
-                .payload(request)
-                .createdAt(LocalDateTime.now())
+                .id(rabbitEvent.getId())
+                .type(rabbitEvent.getType())
+                .payload(rabbitEvent.getPayload())
+                .createdAt(rabbitEvent.getCreatedAt())
                 .build();
         document.getPendingEvents().add(outboxEvent);
         PostItemDocument savedDocument = postItemRepository.save(document);
@@ -75,9 +74,9 @@ public class PostItemService {
      * Преобразование документа в Response DTO
      */
     private PostItemResponse toResponse(PostItemDocument document) {
-        PostItemResponse response = new PostItemResponse();
-        response.setId(document.getId());
-        response.setStatus(document.getStatus());
-        return response;
+        return PostItemResponse.builder()
+                .id(document.getId())
+                .status(document.getStatus())
+                .build();
     }
 }

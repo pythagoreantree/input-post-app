@@ -1,9 +1,6 @@
 package ru.post.PostApp.config;
 
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -21,22 +18,48 @@ public class RabbitMQConfig {
     public static final String ROUTING_KEY = "post.created";
     public static final String QUEUE_NAME = "post_created.queue";
 
+    public static final String DLX_EXCHANGE = "posts.dlx";
+    public static final String DLX_ROUTING_KEY = "post.created.dlq";
+    public static final String DLX_QUEUE = "post_created.dlq";
+
     @Bean
-    public TopicExchange requestsExchange() {
-        return new TopicExchange(EXCHANGE_NAME);
+    public DirectExchange postsExchange() {
+        return new DirectExchange(EXCHANGE_NAME, true, false);
     }
 
     @Bean
-    public Queue requestsQueue() {
-        return new Queue(QUEUE_NAME, true);
+    public Queue postsQueue() {
+        return QueueBuilder.durable(QUEUE_NAME)
+                .withArgument("x-dead-letter-exchange", DLX_EXCHANGE)
+                .withArgument("x-dead-letter-routing-key", DLX_ROUTING_KEY)
+                .build();
     }
 
     @Bean
     public Binding binding() {
         return BindingBuilder
-                .bind(requestsQueue())
-                .to(requestsExchange())
+                .bind(postsQueue())
+                .to(postsExchange())
                 .with(ROUTING_KEY);
+    }
+
+    @Bean
+    public DirectExchange postsDeadLetterExchange() {
+        return new DirectExchange(DLX_EXCHANGE, true, false);
+    }
+
+    @Bean
+    public Queue postsDeadLetterQueue() {
+        return QueueBuilder.durable(DLX_QUEUE)
+                .build();
+    }
+
+    @Bean
+    public Binding postsDeadLetterBinding() {
+        return BindingBuilder
+                .bind(postsDeadLetterQueue())
+                .to(postsDeadLetterExchange())
+                .with(DLX_ROUTING_KEY);
     }
 
     @Bean

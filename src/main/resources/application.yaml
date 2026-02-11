@@ -37,9 +37,11 @@ spring:
 #        multiplier: 2.0
 #        max-retries: 3
 
-
 server:
   port: 8080
+
+events:
+  broker: kafka
 
 management:
   endpoints:

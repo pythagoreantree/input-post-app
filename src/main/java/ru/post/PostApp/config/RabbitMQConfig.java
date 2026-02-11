@@ -36,7 +36,7 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding binding() {
+    public Binding postsBinding() {
         return BindingBuilder
                 .bind(postsQueue())
                 .to(postsExchange())

@@ -1,4 +1,4 @@
-package ru.post.PostApp.repository.mongo;
+package ru.post.PostApp.repository;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;

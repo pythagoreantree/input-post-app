@@ -1,7 +1,6 @@
 package ru.post.PostApp.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.post.PostApp.api.dto.request.PostItemRequest;
@@ -9,7 +8,9 @@ import ru.post.PostApp.api.dto.response.PostItemResponse;
 import ru.post.PostApp.config.RabbitMQConfig;
 import ru.post.PostApp.domain.document.PostItemDocument;
 import ru.post.PostApp.domain.dto.PostCreatedEvent;
-import ru.post.PostApp.repository.mongo.PostItemMongoRepository;
+import ru.post.PostApp.domain.dto.RabbitEventDestination;
+import ru.post.PostApp.publisher.EventPublisher;
+import ru.post.PostApp.repository.PostItemMongoRepository;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -18,6 +19,7 @@ import static ru.post.PostApp.domain.document.PostItemDocument.fromRequest;
 
 @Slf4j
 @Service
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 public class PostItemService {
 
     public static final String POST_CREATED = "POST_CREATED";
@@ -27,7 +29,7 @@ public class PostItemService {
     private PostItemMongoRepository postItemRepository;
 
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private EventPublisher eventPublisher;
 
     /**
      * Создание почтового отправления из DTO
@@ -53,9 +55,11 @@ public class PostItemService {
         PostItemDocument savedDocument = postItemRepository.save(document);
 
         try {
-            rabbitTemplate.convertAndSend(
-                    RabbitMQConfig.EXCHANGE_NAME,
-                    RabbitMQConfig.ROUTING_KEY,
+            eventPublisher.publish(
+                    RabbitEventDestination.builder()
+                            .exchange(RabbitMQConfig.EXCHANGE_NAME)
+                            .routingKey(RabbitMQConfig.ROUTING_KEY)
+                            .build(),
                     rabbitEvent
             );
 

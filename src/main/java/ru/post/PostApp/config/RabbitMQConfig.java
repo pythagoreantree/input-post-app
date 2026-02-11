@@ -1,5 +1,7 @@
 package ru.post.PostApp.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -21,6 +23,8 @@ public class RabbitMQConfig {
     public static final String DLX_EXCHANGE = "posts.dlx";
     public static final String DLX_ROUTING_KEY = "post.created.dlq";
     public static final String DLX_QUEUE = "post_created.dlq";
+
+    private static final Logger log = LoggerFactory.getLogger(RabbitMQConfig.class);
 
     @Bean
     public DirectExchange postsExchange() {
@@ -82,6 +86,20 @@ public class RabbitMQConfig {
                                          JacksonJsonMessageConverter messageConverter) {
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
         template.setMessageConverter(messageConverter);
+
+        template.setConfirmCallback((correlationData, ack, cause) -> {
+            if (!ack) {
+                log.error("Message rejected by broker: {}", cause);
+            }
+        });
+
+        template.setReturnsCallback(returned -> {
+            log.error("Message returned: exchange={}, routingKey={}, replyCode={}, replyText={}",
+                    returned.getExchange(),
+                    returned.getRoutingKey(),
+                    returned.getReplyCode(),
+                    returned.getReplyText());
+        });
         return template;
     }
 }

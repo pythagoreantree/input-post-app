@@ -30,6 +30,7 @@ spring:
     publisher-returns: true
 
     template:
+      mandatory: true
       delivery-mode: persistent
       retry:
         enabled: false

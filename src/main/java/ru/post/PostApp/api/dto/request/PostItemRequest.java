@@ -6,6 +6,7 @@ import lombok.Getter;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 public class PostItemRequest implements Serializable {
@@ -13,6 +14,9 @@ public class PostItemRequest implements Serializable {
     @NotBlank(message = "Тип почтового отправления обязателен")
     @Pattern(regexp = "LETTER|PARCEL|REGISTERED", message = "Недопустимый тип")
     private String type;
+
+    @NotNull(message = "Идентификатор пользователя в системе обязателен")
+    private UUID userId;
 
     @NotNull(message = "Информация об отправителе обязательна")
     @Valid

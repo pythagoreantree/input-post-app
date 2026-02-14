@@ -2,6 +2,40 @@ POST http://localhost:8080/api/v1/post-items
 Content-Type: application/json
 
 {
+  "type": "LETTER",
+  "userId": "7130c9d3-a9ae-415b-823c-10b9685cd4c4",
+  "sender": {
+    "firstName": "Григорий",
+    "middleName": "Валентинович",
+    "lastName": "Белов",
+    "postalCode": "946481",
+    "country": "Россия",
+    "city": "Мытищи",
+    "street": "Восточная пр.",
+    "house": "212"
+  },
+  "receiver": {
+    "firstName": "Евгений",
+    "middleName": "Егорович",
+    "lastName": "Дорофеев",
+    "postalCode": "947720",
+    "country": "Россия",
+    "city": "Тверь",
+    "street": "улица Степная",
+    "house": "990",
+    "building": "1"
+  },
+  "postOfficeCode": "MOSCOW-045",
+  "operatorId": "OP-54321",
+  "sourceSystem": "MOBILE_APP",
+  "acceptedAt": "2025-02-11T16:20:00"
+}
+
+###
+POST http://localhost:8080/api/v1/post-items
+Content-Type: application/json
+
+{
   "type": "PARCEL",
   "sender": {
     "firstName": "Елена",

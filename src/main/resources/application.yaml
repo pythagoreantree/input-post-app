@@ -19,6 +19,8 @@ spring:
 
   mongodb:
     uri: mongodb://localhost:27017/postapp_db
+    representation:
+      uuid: standard
 
   rabbitmq:
     host: localhost

@@ -3,6 +3,7 @@ package ru.post.PostApp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -102,5 +103,56 @@ public class PostItemServiceTest {
                 document.getPendingEvents().stream()
                         .anyMatch(event -> PostItemService.SENT.equals(event.getStatus()))
         ));
+    }
+
+    @Test
+    void shouldCreatePostItemEvenWhenRabbitFails() {
+        // given
+        when(postItemRepository.save(any(PostItemDocument.class))).thenReturn(savedDocument);
+
+        // При публикации кидаем исключение (RabbitMQ упал)
+        doThrow(new RuntimeException("RabbitMQ connection failed"))
+                .when(eventPublisher).publish(any(RabbitEventDestination.class), any(PostCreatedEvent.class));
+
+        // when
+        PostItemResponse response = postItemService.createPostItem(request);
+
+        // then
+        // Проверяем, что метод всё равно вернул ответ (не упал)
+        assertThat(response).isNotNull();
+        assertThat(response.getId()).isEqualTo(savedDocument.getId());
+        assertThat(response.getStatus()).isEqualTo(savedDocument.getStatus());
+
+        // Проверяем, что save вызывался ТОЛЬКО ОДИН раз
+        // (второго save с обновлением статуса быть не должно, так как RabbitMQ упал)
+        verify(postItemRepository, times(1)).save(any(PostItemDocument.class));
+
+        // Проверяем, что событие пыталось опубликоваться
+        verify(eventPublisher, times(1))
+                .publish(any(RabbitEventDestination.class), any(PostCreatedEvent.class));
+
+        // Проверяем, что статус события НЕ стал SENT
+        verify(postItemRepository, times(1)).save(argThat((PostItemDocument document) -> {
+            return document.getPendingEvents().stream()
+                    .noneMatch(event -> PostItemService.SENT.equals(event.getStatus()));
+        }));
+    }
+
+    @Test
+    void shouldCreateEventWithCorrectType() {
+        // given
+        when(postItemRepository.save(any(PostItemDocument.class))).thenReturn(savedDocument);
+
+        ArgumentCaptor<PostCreatedEvent> eventCaptor = ArgumentCaptor.forClass(PostCreatedEvent.class);
+        doNothing().when(eventPublisher).publish(any(), eventCaptor.capture());
+
+        // when
+        postItemService.createPostItem(request);
+
+        // then
+        PostCreatedEvent publishedEvent = eventCaptor.getValue();
+        assertThat(publishedEvent.getType()).isEqualTo(PostItemService.POST_CREATED);
+        assertThat(publishedEvent.getPayload()).isEqualTo(request);
+        assertThat(publishedEvent.getId()).isNotBlank();
     }
 }

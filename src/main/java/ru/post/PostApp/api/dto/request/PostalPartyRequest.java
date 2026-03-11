@@ -3,11 +3,13 @@ package ru.post.PostApp.api.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.io.Serializable;
 
 @Getter
+@Builder
 public class PostalPartyRequest implements Serializable {
 
     @NotBlank(message = "Имя обязательно")

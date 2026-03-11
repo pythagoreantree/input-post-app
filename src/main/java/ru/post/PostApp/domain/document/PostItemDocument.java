@@ -15,6 +15,7 @@ import java.util.UUID;
 
 @Builder
 @Getter
+@Setter
 @Document(collection = "post_items")
 public class PostItemDocument {
 

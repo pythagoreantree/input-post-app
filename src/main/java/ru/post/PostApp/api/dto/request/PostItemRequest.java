@@ -2,6 +2,7 @@ package ru.post.PostApp.api.dto.request;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.io.Serializable;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
+@Builder
 public class PostItemRequest implements Serializable {
 
     @NotBlank(message = "Тип почтового отправления обязателен")
